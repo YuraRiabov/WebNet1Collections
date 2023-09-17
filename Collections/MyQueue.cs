@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Collections;
 
@@ -65,16 +66,20 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
         {
             throw new InvalidOperationException();
         }
-        
-        var first = _first;
-        _first = _first.Next;
 
-        if (_first is not null && !first.HasNext)
+        return DequeueInternal();
+    }
+
+    public bool TryDequeue([MaybeNullWhen(false)] out T value)
+    {
+        if (_first is null)
         {
-            _last = null;
+            value = default;
+            return false;
         }
-        
-        return first.Value;
+
+        value = DequeueInternal();
+        return true;
     }
 
     public T Peek()
@@ -85,6 +90,18 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
         }
 
         return _first.Value;
+    }
+
+    public bool TryPeek([MaybeNullWhen(false)] out T value)
+    {
+        if (_first is null)
+        {
+            value = default;
+            return false;
+        }
+
+        value = _first.Value;
+        return true;
     }
 
     public void Clear()
@@ -155,7 +172,19 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
     {
         return GetEnumerator();
     }
-    
+
+    private T DequeueInternal()
+    {
+        var first = _first;
+        _first = _first!.Next;
+
+        if (_first is not null && !first!.HasNext)
+        {
+            _last = null;
+        }
+
+        return first!.Value;
+    }
 
     private void CopyToInternal(Array array, int index)
     {
