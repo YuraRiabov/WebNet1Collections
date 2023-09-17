@@ -86,6 +86,35 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
 
         return _first.Value;
     }
+
+    public void Clear()
+    {
+        _first = null;
+        _last = null;
+    }
+
+    public bool Contains(T item)
+    {
+        var currentItem = _first;
+        while (currentItem is not null)
+        {
+            if (currentItem.Value!.Equals(item))
+            {
+                return true;
+            }
+
+            currentItem = currentItem.Next;
+        }
+
+        return false;
+    }
+
+    public T[] ToArray()
+    {
+        var array = new T[Count];
+        CopyToInternal(array, 0);
+        return array;
+    }
     
     public void CopyTo(T[] array, int index)
     {
