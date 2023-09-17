@@ -2,19 +2,28 @@
 
 namespace Collections;
 
-public class MyQueue<T> : IEnumerable<T>
+public class MyQueue<T> : IEnumerable<T>, ICollection
 {
     private MyQueueNode<T>? _first;
     private MyQueueNode<T>? _last;
-    public IEnumerator<T> GetEnumerator()
+
+    public int Count
     {
-        var currentNode = _first;
-        while (currentNode is not null)
+        get
         {
-            yield return currentNode.Value;
-            currentNode = currentNode.Next;
+            var count = 0;
+            var currentItem = _first;
+            while (currentItem is not null)
+            {
+                count++;
+                currentItem = currentItem.Next;
+            }
+
+            return count;
         }
     }
+    public bool IsSynchronized => false;
+    public object SyncRoot => this;
 
     public MyQueue()
     {
@@ -77,10 +86,78 @@ public class MyQueue<T> : IEnumerable<T>
 
         return _first.Value;
     }
+    
+    public void CopyTo(T[] array, int index)
+    {
+        if (!IsValidArrayLengthIndexForCopy(array, index))
+        {
+            throw new ArgumentOutOfRangeException();
+        }
+        
+        CopyToInternal(array, index);
+    }
+    
+    void ICollection.CopyTo(Array array, int index)
+    {
+        if (!IsValidArrayLengthIndexForCopy(array, index))
+        {
+            throw new ArgumentOutOfRangeException();
+        }
+
+        if (!IsValidArrayTypeForCopy(array))
+        {
+            throw new ArgumentException(nameof(array));
+        }
+        
+        CopyToInternal(array, index);
+    }
+    
+    public IEnumerator<T> GetEnumerator()
+    {
+        var currentNode = _first;
+        while (currentNode is not null)
+        {
+            yield return currentNode.Value;
+            currentNode = currentNode.Next;
+        }
+    }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+    
+
+    private void CopyToInternal(Array array, int index)
+    {
+        var currentIndex = index;
+        var currentItem = _first;
+        while (currentItem is not null)
+        {
+            array.SetValue(currentItem.Value, currentIndex);
+            currentItem = currentItem.Next;
+            currentIndex++;
+        }
+    }
+
+    private bool IsValidArrayLengthIndexForCopy(Array array, int index)
+    {
+        if (array is null)
+        {
+            return false;
+        }
+
+        if (index < 0 || index >= array.Length)
+        {
+            return false;
+        }
+
+        return array.Length - index >= Count;
+    }
+
+    private bool IsValidArrayTypeForCopy(Array array)
+    {
+        return array.Rank == 1 && array.GetLowerBound(0) == 0;
     }
 
     private class MyQueueNode<TValue>
