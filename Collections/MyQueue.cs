@@ -8,6 +8,9 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
     private MyQueueNode<T>? _first;
     private MyQueueNode<T>? _last;
 
+    public event Action? LastElementRemoved;
+    public event Action? LastElementLeft;
+
     public int Count
     {
         get
@@ -28,7 +31,8 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
 
     public MyQueue()
     {
-        
+        _first = null;
+        _last = null;
     }
 
     public MyQueue(IEnumerable<T> source)
@@ -178,9 +182,15 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
         var first = _first;
         _first = _first!.Next;
 
-        if (_first is not null && !first!.HasNext)
+        if (_first is not null && !_first.HasNext)
         {
             _last = null;
+            LastElementLeft?.Invoke();
+        }
+
+        if (_first is null)
+        {
+            LastElementRemoved?.Invoke();
         }
 
         return first!.Value;
@@ -222,7 +232,7 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
     {
         public TValue Value { get; set; }
         public MyQueueNode<TValue>? Next { get; set; }
-        public bool HasNext => Next is null;
+        public bool HasNext => Next is not null;
 
         public MyQueueNode(TValue value)
         {
