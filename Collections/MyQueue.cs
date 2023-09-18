@@ -5,8 +5,8 @@ namespace Collections;
 
 public class MyQueue<T> : IEnumerable<T>, ICollection
 {
-    private MyQueueNode<T>? _first;
-    private MyQueueNode<T>? _last;
+    private MyQueueNode? _first;
+    private MyQueueNode? _last;
 
     public event Action? LastElementRemoved;
     public event Action? LastElementLeft;
@@ -45,7 +45,7 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
 
     public void Enqueue(T value)
     {
-        var newNode = new MyQueueNode<T>(value);
+        var newNode = new MyQueueNode(value);
         
         if (_first is null)
         {
@@ -112,6 +112,7 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
     {
         _first = null;
         _last = null;
+        LastElementRemoved?.Invoke();
     }
 
     public bool Contains(T item)
@@ -228,13 +229,13 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
         return array.Rank == 1 && array.GetLowerBound(0) == 0;
     }
 
-    private class MyQueueNode<TValue>
+    private class MyQueueNode
     {
-        public TValue Value { get; set; }
-        public MyQueueNode<TValue>? Next { get; set; }
+        public T Value { get; }
+        public MyQueueNode? Next { get; set; }
         public bool HasNext => Next is not null;
 
-        public MyQueueNode(TValue value)
+        public MyQueueNode(T value)
         {
             Value = value;
         }

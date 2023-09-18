@@ -10,8 +10,8 @@ void OutputCollection(IEnumerable<int> collection)
     Console.WriteLine();
 }
 
-var onLastItemLeft = () => Console.WriteLine("Hello world from last element left");
-var onEmptyQueue = () => Console.WriteLine("Goodbye world from empty queue");
+void OnLastItemLeft() => Console.WriteLine("Hello world from last element left");
+void OnEmptyQueue() => Console.WriteLine("Goodbye world from empty queue");
 
 var queue = new MyQueue<int>();
 
@@ -59,8 +59,8 @@ var copiedQueue = new MyQueue<int>(longArray);
 Console.WriteLine($"Constructor with source check, copied queue:");
 OutputCollection(copiedQueue);
 
-queue.LastElementLeft += onLastItemLeft;
-queue.LastElementRemoved += onEmptyQueue;
+queue.LastElementLeft += OnLastItemLeft;
+queue.LastElementRemoved += OnEmptyQueue;
 for (int i = 0; i < 3; i++)
 {
     queue.TryDequeue(out dequeued);
@@ -74,3 +74,11 @@ foreach (var item in longArray)
 }
 Console.WriteLine("Refill empty queue check, queue after refill from long array:");
 OutputCollection(queue);
+
+var queueAsArray = queue.ToArray();
+Console.WriteLine("To array check, copy as array:");
+OutputCollection(queueAsArray);
+
+Console.WriteLine("Clear check");
+queue.Clear();
+Console.WriteLine($"Queue count after clear: {queue.Count}");
