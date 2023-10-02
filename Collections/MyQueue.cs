@@ -120,7 +120,7 @@ public class MyQueue<T> : IEnumerable<T>, ICollection
         var currentItem = _first;
         while (currentItem is not null)
         {
-            if (currentItem.Value!.Equals(item))
+            if (currentItem.Value is null && item is null || currentItem.Value is not null && currentItem.Value.Equals(item))
             {
                 return true;
             }

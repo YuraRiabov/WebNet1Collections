@@ -23,7 +23,7 @@ public class MyQueueTests
 
     [Theory]
     [MemberData(nameof(GetTestDataForQueueFill))]
-    public void Enqueue_ShouldAddElements<T>(T[] values)
+    public void Enqueue_WhenEmptyQueue_ShouldAddElements<T>(T[] values)
     {
         var queue = new MyQueue<T>();
         foreach (var value in values)
@@ -32,6 +32,34 @@ public class MyQueueTests
         }
 
         AssertEqualCollections(values, queue);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void Enqueue_WhenQueueCleared_ShouldAddElements<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+        
+        queue.Clear();
+        foreach (var value in values)
+        {
+            queue.Enqueue(value);
+        }
+
+        AssertEqualCollections(values, queue);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void Enqueue_WhenNotEmptyQueue_ShouldAddElements<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+        foreach (var value in values)
+        {
+            queue.Enqueue(value);
+        }
+
+        Assert.Equal(values.Length * 2, queue.Count);
     }
 
     [Theory]
@@ -158,6 +186,59 @@ public class MyQueueTests
         Assert.Empty(queue);
         Assert.False(tryDequeueResult);
         Assert.Equal(default, currentValue);
+    }
+
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void Clear_ShouldMakeQueueEmpty<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+        
+        queue.Clear();
+        
+        Assert.Empty(queue);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void Contains_WhenHasElement_ShouldBeTrue<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+
+        foreach (var value in values)
+        {
+            var containsResult = queue.Contains(value);
+        
+            Assert.True(containsResult);
+        }
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void Contains_WhenHasNoElement_ShouldBeFalse<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+
+        queue.Dequeue();
+        var containsResult = queue.Contains(values[0]);
+    
+        Assert.False(containsResult);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void Count_WhenElementsChange_ShouldBeCorrect<T>(T[] values)
+    {
+        var queue = new MyQueue<T>();
+        for (int i = 0; i < values.Length; i++)
+        {
+            queue.Enqueue(values[i]);
+            
+            Assert.Equal(i + 1, queue.Count);
+        }
+        
+        queue.Clear();
+        Assert.Equal(0, queue.Count);
     }
 
     private static void AssertEqualCollections<T>(IEnumerable<T> values, IEnumerable<T> queue)
