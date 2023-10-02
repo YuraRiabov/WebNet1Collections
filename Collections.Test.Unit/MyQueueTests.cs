@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Collections;
+using Xunit;
 
 namespace Collections.Test.Unit;
 
@@ -241,10 +242,198 @@ public class MyQueueTests
         Assert.Equal(0, queue.Count);
     }
 
-    private static void AssertEqualCollections<T>(IEnumerable<T> values, IEnumerable<T> queue)
+    [Theory]
+    [MemberData(nameof(GetEmptyQueuesTestData))]
+    public void ToArray_WhenEmptyQueue_ShouldReturnEmptyArray<T>(MyQueue<T> queue)
     {
-        using var enumerator = queue.GetEnumerator();
-        foreach (T value in values)
+        var array = queue.ToArray();
+        
+        Assert.Empty(array);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void ToArray_WhenNotEmptyQueue_ShouldReturnArray<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+
+        var array = queue.ToArray();
+        
+        AssertEqualCollections(array, values);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyTo_WhenValidParams_ShouldCopy<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+
+        var array = new T[values.Length];
+        
+        queue.CopyTo(array, 0);
+        
+        AssertEqualCollections(array, values);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyTo_WhenLongerArray_ShouldCopy<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+
+        var array = new T[values.Length];
+
+        queue.Dequeue();
+        
+        queue.CopyTo(array, 1);
+        
+        Assert.DoesNotContain(values[0], array);
+        Assert.Equal(default, array[0]);
+        for (var i = 1; i < values.Length; i++)
+        {
+            Assert.Equal(values[i], array[i]);
+        }
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyTo_WhenShortArray_ShouldThrow<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+
+        var array = new T[values.Length - 1];
+        
+        var code = () => queue.CopyTo(array, 0);
+
+        Assert.Throws<ArgumentOutOfRangeException>(code);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyTo_WhenNullArray_ShouldThrow<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+
+        T[] array = null;
+        
+        var code = () => queue.CopyTo(array, 0);
+
+        Assert.Throws<ArgumentOutOfRangeException>(code);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyTo_WhenInvalidIndex_ShouldThrow<T>(T[] values)
+    {
+        var queue = new MyQueue<T>(values);
+
+        var array = new T[values.Length];
+        
+        var code = () => queue.CopyTo(array,values.Length + 1);
+
+        Assert.Throws<ArgumentOutOfRangeException>(code);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyToNonGeneric_WhenValidParams_ShouldCopy<T>(T[] values)
+    {
+        ICollection queue = new MyQueue<T>(values);
+
+        Array array = new T[values.Length];
+        
+        queue.CopyTo(array, 0);
+        
+        Assert.Equal(array.Length, values.Length);
+        Assert.Equal(array.GetValue(0), values[0]);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyToNonGeneric_WhenLongerArray_ShouldCopy<T>(T[] values)
+    {
+        ICollection queue = new MyQueue<T>(values);
+
+        Array array = new T[values.Length + 1];
+        
+        queue.CopyTo(array, 1);
+        
+        Assert.Equal(default(T), array.GetValue(0));
+        for (var i = 0; i < values.Length; i++)
+        {
+            Assert.Equal(values[i], array.GetValue(i + 1));
+        }
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyToNotGeneric_WhenShortArray_ShouldThrow<T>(T[] values)
+    {
+        ICollection queue = new MyQueue<T>(values);
+
+        Array array = new T[values.Length - 1];
+        
+        var code = () => queue.CopyTo(array, 0);
+
+        Assert.Throws<ArgumentOutOfRangeException>(code);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyToNotGeneric_WhenNullArray_ShouldThrow<T>(T[] values)
+    {
+        ICollection queue = new MyQueue<T>(values);
+
+        Array array = null;
+        
+        var code = () => queue.CopyTo(array, 0);
+
+        Assert.Throws<ArgumentOutOfRangeException>(code);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyToNotGeneric_WhenInvalidIndex_ShouldThrow<T>(T[] values)
+    {
+        ICollection queue = new MyQueue<T>(values);
+
+        Array array = new T[values.Length];
+        
+        var code = () => queue.CopyTo(array,values.Length + 1);
+
+        Assert.Throws<ArgumentOutOfRangeException>(code);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyToNotGeneric_WhenInvalidRank_ShouldThrow<T>(T[] values)
+    {
+        ICollection queue = new MyQueue<T>(values);
+
+        Array array = Array.CreateInstance(typeof(T), new[] { values.Length, values.Length }, new[] { 0, 0 });
+        
+        var code = () => queue.CopyTo(array,0);
+
+        Assert.Throws<ArgumentException>(code);
+    }
+    
+    [Theory]
+    [MemberData(nameof(GetTestDataForQueueFill))]
+    public void CopyToNotGeneric_WhenInvalidLowerBound_ShouldThrow<T>(T[] values)
+    {
+        ICollection queue = new MyQueue<T>(values);
+
+        Array array = Array.CreateInstance(typeof(T), new[] { values.Length }, new[] { 1 });
+        
+        var code = () => queue.CopyTo(array,0);
+
+        Assert.Throws<ArgumentException>(code);
+    }
+
+    private static void AssertEqualCollections<T>(IEnumerable<T> expected, IEnumerable<T> actual)
+    {
+        using var enumerator = actual.GetEnumerator();
+        foreach (T value in expected)
         {
             enumerator.MoveNext();
             var currentValue = enumerator.Current;
