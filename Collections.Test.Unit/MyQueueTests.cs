@@ -297,42 +297,14 @@ public class MyQueueTests
     }
     
     [Theory]
-    [MemberData(nameof(GetTestDataForQueueFill))]
-    public void CopyTo_WhenShortArray_ShouldThrow<T>(T[] values)
+    [MemberData(nameof(GetCopyToGenericTestData))]
+    public void CopyTo_WhenInvalidParams_ShouldThrow<T>(T[] values, T[] array, int index, Type exceptionType)
     {
         var queue = new MyQueue<T>(values);
-
-        var array = new T[values.Length - 1];
         
-        var code = () => queue.CopyTo(array, 0);
+        var code = () => queue.CopyTo(array, index);
 
-        Assert.Throws<ArgumentOutOfRangeException>(code);
-    }
-    
-    [Theory]
-    [MemberData(nameof(GetTestDataForQueueFill))]
-    public void CopyTo_WhenNullArray_ShouldThrow<T>(T[] values)
-    {
-        var queue = new MyQueue<T>(values);
-
-        T[] array = null;
-        
-        var code = () => queue.CopyTo(array, 0);
-
-        Assert.Throws<ArgumentOutOfRangeException>(code);
-    }
-    
-    [Theory]
-    [MemberData(nameof(GetTestDataForQueueFill))]
-    public void CopyTo_WhenInvalidIndex_ShouldThrow<T>(T[] values)
-    {
-        var queue = new MyQueue<T>(values);
-
-        var array = new T[values.Length];
-        
-        var code = () => queue.CopyTo(array,values.Length + 1);
-
-        Assert.Throws<ArgumentOutOfRangeException>(code);
+        Assert.Throws(exceptionType, code);
     }
     
     [Theory]
@@ -367,68 +339,14 @@ public class MyQueueTests
     }
     
     [Theory]
-    [MemberData(nameof(GetTestDataForQueueFill))]
-    public void CopyToNotGeneric_WhenShortArray_ShouldThrow<T>(T[] values)
+    [MemberData(nameof(GetCopyToNotGenericTestData))]
+    public void CopyToNotGeneric_WhenInvalidData_ShouldThrow<T>(T[] values, Array array, int index, Type exceptionType)
     {
         ICollection queue = new MyQueue<T>(values);
-
-        Array array = new T[values.Length - 1];
         
-        var code = () => queue.CopyTo(array, 0);
+        var code = () => queue.CopyTo(array, index);
 
-        Assert.Throws<ArgumentOutOfRangeException>(code);
-    }
-    
-    [Theory]
-    [MemberData(nameof(GetTestDataForQueueFill))]
-    public void CopyToNotGeneric_WhenNullArray_ShouldThrow<T>(T[] values)
-    {
-        ICollection queue = new MyQueue<T>(values);
-
-        Array array = null;
-        
-        var code = () => queue.CopyTo(array, 0);
-
-        Assert.Throws<ArgumentOutOfRangeException>(code);
-    }
-    
-    [Theory]
-    [MemberData(nameof(GetTestDataForQueueFill))]
-    public void CopyToNotGeneric_WhenInvalidIndex_ShouldThrow<T>(T[] values)
-    {
-        ICollection queue = new MyQueue<T>(values);
-
-        Array array = new T[values.Length];
-        
-        var code = () => queue.CopyTo(array,values.Length + 1);
-
-        Assert.Throws<ArgumentOutOfRangeException>(code);
-    }
-    
-    [Theory]
-    [MemberData(nameof(GetTestDataForQueueFill))]
-    public void CopyToNotGeneric_WhenInvalidRank_ShouldThrow<T>(T[] values)
-    {
-        ICollection queue = new MyQueue<T>(values);
-
-        Array array = Array.CreateInstance(typeof(T), new[] { values.Length, values.Length }, new[] { 0, 0 });
-        
-        var code = () => queue.CopyTo(array,0);
-
-        Assert.Throws<ArgumentException>(code);
-    }
-    
-    [Theory]
-    [MemberData(nameof(GetTestDataForQueueFill))]
-    public void CopyToNotGeneric_WhenInvalidLowerBound_ShouldThrow<T>(T[] values)
-    {
-        ICollection queue = new MyQueue<T>(values);
-
-        Array array = Array.CreateInstance(typeof(T), new[] { values.Length }, new[] { 1 });
-        
-        var code = () => queue.CopyTo(array,0);
-
-        Assert.Throws<ArgumentException>(code);
+        Assert.Throws(exceptionType, code);
     }
     
     [Theory]
@@ -501,6 +419,32 @@ public class MyQueueTests
         yield return new object[] { NumberArray };
         yield return new object[] { StructureArray };
         yield return new object[] { ObjectArray };
+    }
+
+    public static IEnumerable<object[]> GetCopyToGenericTestData() => GetCopyToTestData(true);
+
+    public static IEnumerable<object[]> GetCopyToNotGenericTestData() => GetCopyToTestData(false);
+    
+    private static IEnumerable<object[]> GetCopyToTestData(bool isGeneric)
+    {
+        var types = new[] { typeof(int), typeof(TestStructure), typeof(TestClass) };
+        var currentTypeIndex = 0;
+        foreach (var values in GetTestDataForQueueFill())
+        {
+            var array = values[0] as Array;
+            var type = types[currentTypeIndex];
+            yield return new object[] { array, null, 0, typeof(ArgumentOutOfRangeException) };
+            yield return new object[] { array, Array.CreateInstance(type, array.Length - 1), 0, typeof(ArgumentOutOfRangeException) };
+            yield return new object[] { array, Array.CreateInstance(type, array.Length ), 1, typeof(ArgumentOutOfRangeException) };
+            yield return new object[] { array, Array.CreateInstance(type, array.Length ), -1, typeof(ArgumentOutOfRangeException) };
+            yield return new object[] { array, Array.CreateInstance(type, array.Length ), array.Length + 1, typeof(ArgumentOutOfRangeException) };
+            if (!isGeneric)
+            {
+                yield return new object[] { array, Array.CreateInstance(type, new []{ array.Length, array.Length }, new []{ 0, 0 } ), 0, typeof(ArgumentException) };
+                yield return new object[] { array, Array.CreateInstance(type, new []{ array.Length }, new []{ 1 } ), 0, typeof(ArgumentException) };
+            }
+            currentTypeIndex++;
+        }
     }
     
     private class TestClass
